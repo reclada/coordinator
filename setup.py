@@ -8,6 +8,7 @@ setup(
     version='0.1',
     packages=['reclada.coordinator'],
     install_requires=[
+        'reclada.connector',
         'luigi',
         'requests',
         'boto3',
