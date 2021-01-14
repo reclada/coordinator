@@ -36,8 +36,10 @@ class DominoTask(Task):
 
     def _run_until_complete(self, command):
         task = domino.run(
-            self.owner, self.project, command,
-            title=f"{configs.DOMINO_RUN_NUMBER}:{self.step_id}"
+            self.owner, self.project,
+            command,
+            title=f"{configs.DOMINO_RUN_NUMBER}:{self.step_id}",
+            is_direct=True,
         )
         task_id = task["runId"]
         logger.info("%s: job started with id=%s", self.step_id, task_id)
@@ -87,55 +89,11 @@ class SimpleDominoTask(DominoTask):
         self._download_result(output_commit, self.output_path, self.output())
 
 
-class Ocr(SimpleDominoTask):
-    pdf = Parameter()
-
-    owner = configs.OWNER
-    project = "pdf_ocr"
-    input_path = f"input/{configs.RUN_ID}.pdf"
-    output_path = f"results/ocr_{configs.RUN_ID}.json"
-    command = [
-        f"{configs.REPO_DIR}/run_job.sh",
-        f"{configs.REPO_DIR}/pdf_ocr",
-        input_path,
-        output_path
-    ]
-    step_id = "pdf_ocr"
-
-    def requires(self):
-        return DocumentConverter(self.document_id, self.pdf)
-
-    def output(self):
-        return PocS3Target(f"{self.output_prefix()}/ocr.json")
-
-
-class Text(SimpleDominoTask):
-    pdf = Parameter()
-
-    owner = configs.OWNER
-    project = "pdf_parser"
-    input_path = f"input/{configs.RUN_ID}.pdf"
-    output_path = f"results/text_{configs.RUN_ID}.json"
-    command = [
-        f"{configs.REPO_DIR}/run_job.sh",
-        f"{configs.REPO_DIR}/pdf_parser",
-        input_path,
-        output_path
-    ]
-    step_id = "pdf_parser"
-
-    def requires(self):
-        return DocumentConverter(self.document_id, self.pdf)
-
-    def output(self):
-        return PocS3Target(f"{self.output_prefix()}/text.json")
-
-
 class CsvTables(SimpleDominoTask):
     pdf = Parameter()
 
     owner = configs.OWNER
-    project = "pdf_parser"
+    project = "reclada_parser"
     output_path = f"results/csv_tables{configs.RUN_ID}.json"
 
     step_id = "csv_tables"
@@ -148,8 +106,7 @@ class CsvTables(SimpleDominoTask):
     @property
     def command(self):
         return [
-            f"{configs.REPO_DIR}/run_job.sh",
-            f"{configs.REPO_DIR}/csv_parser",
+            f"reclada-csv-parser",
             self.input_path,
             self.output_path
         ]
@@ -183,10 +140,10 @@ class Tables(SimpleDominoTask):
 
 
 class DictExtractor(DominoTask):
-    pdf = Parameter()
+    pdf: str = Parameter()
 
     owner = configs.OWNER
-    project = "pdf_parser"
+    project = "reclada_extractor"
     text_input_path = f"input/{configs.RUN_ID}/dicts_extractor/text.json"
     tables_input_path = f"input/{configs.RUN_ID}/dicts_extractor/tables.json"
     output_path = f"results/stdout.txt"
@@ -195,8 +152,7 @@ class DictExtractor(DominoTask):
     @property
     def command(self):
         return [
-            f"{configs.REPO_DIR}/run_job.sh",
-            f"{configs.REPO_DIR}/dicts_extractor",
+            f"reclada-dicts-extractor",
             str(self.document_id),
             self.text_input_path,
             self.tables_input_path,
@@ -213,8 +169,6 @@ class DictExtractor(DominoTask):
         if self.is_csv:
             tables_step = CsvTables(self.document_id, self.pdf)
         else:
-            yield Ocr(self.document_id, self.pdf)
-            yield Text(self.document_id, self.pdf)
             tables_step = Tables(self.document_id, self.pdf)
 
         yield tables_step
