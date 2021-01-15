@@ -1,0 +1,3 @@
+git+https://github.com/reclada/connector.git
+git+https://github.com/reclada/coordinator.git
+git+https://github.com/reclada/devops.domino.git

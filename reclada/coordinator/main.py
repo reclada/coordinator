@@ -4,24 +4,26 @@ import shutil
 import time
 from io import BytesIO
 from logging import getLogger
+from shlex import quote
 from typing import List
 from uuid import uuid4
 
 from luigi import Task, LocalTarget, run, Parameter, IntParameter, build
 from luigi.format import Nop
 from reclada.connector import PgConnector as Connector
+from reclada.devops.domino import Domino
 
 from . import configs
-from .mydomino import Domino
 from .utils import PocS3Target, PocS3FileUploader
 
-domino = Domino(configs.DOMINO_KEY, base_url=f"{configs.DOMINO_URL}/v1/")
+domino = Domino(configs.DOMINO_KEY, base_url=configs.DOMINO_URL)
 
 logger = getLogger("luigi-interface")
 
 
 class DominoTask(Task):
     document_id = IntParameter()
+    is_direct_command: bool = True
 
     project: str
     owner: str
@@ -35,20 +37,20 @@ class DominoTask(Task):
                 domino.upload(self.owner, self.project, target_path, f.read())
 
     def _run_until_complete(self, command):
-        task = domino.run(
+        task = domino.start_run(
             self.owner, self.project,
             command,
             title=f"{configs.DOMINO_RUN_NUMBER}:{self.step_id}",
-            is_direct=True,
+            is_direct=self.is_direct_command,
         )
-        task_id = task["runId"]
+        task_id = task.run_id
         logger.info("%s: job started with id=%s", self.step_id, task_id)
         is_completed = False
         task_status = None
         while not is_completed:
             task_status = domino.run_status(self.owner, self.project, task_id)
-            is_completed = task_status["isCompleted"]
-            logger.debug("%s: waiting job, current status=%s", self.step_id, task_status.get("status"))
+            is_completed = task_status.is_completed
+            logger.debug("%s: waiting job, current status=%s", self.step_id, task_status.status)
             time.sleep(5)
         return task_status
 
@@ -85,7 +87,7 @@ class SimpleDominoTask(DominoTask):
     def run(self):
         self._upload(self.input(), self.input_path)
         task_status = self._run_until_complete(self.command)
-        output_commit = task_status.get("outputCommitId")
+        output_commit = task_status.output_commit_id
         self._download_result(output_commit, self.output_path, self.output())
 
 
@@ -105,11 +107,7 @@ class CsvTables(SimpleDominoTask):
 
     @property
     def command(self):
-        return [
-            f"reclada-csv-parser",
-            self.input_path,
-            self.output_path
-        ]
+        return [f"reclada-csv-parser {quote(self.input_path)} {quote(self.output_path)}"]
 
     def input(self):
         return LocalTarget(self.pdf, format=Nop)
@@ -125,11 +123,7 @@ class Tables(SimpleDominoTask):
     project = "tables_extraction"
     input_path = f"input/{configs.RUN_ID}.pdf"
     output_path = f"results/output.json/{configs.RUN_ID}.pdf/json_out.json"
-    command = [
-        f"{configs.REPO_DIR}/run_job.sh",
-        f"{configs.REPO_DIR}/tables_extraction",
-        input_path,
-    ]
+    command = [f"python -m badgerdoc.pipeline full {quote(input_path)} results/output.json"]
     step_id = "tables_extraction"
 
     def requires(self):
@@ -152,10 +146,7 @@ class DictExtractor(DominoTask):
     @property
     def command(self):
         return [
-            f"reclada-dicts-extractor",
-            str(self.document_id),
-            self.text_input_path,
-            self.tables_input_path,
+            f"reclada-dicts-extractor {self.document_id} {quote(self.text_input_path)} {quote(self.tables_input_path)}"
         ]
 
     @property
@@ -174,7 +165,7 @@ class DictExtractor(DominoTask):
         yield tables_step
         self._upload(tables_step.output(), self.tables_input_path)
         task_status = self._run_until_complete(self.command)
-        output_commit = task_status.get("outputCommitId")
+        output_commit = task_status.output_commit_id
         self._download_result(output_commit, self.output_path, self.output())
 
 
@@ -203,11 +194,10 @@ class DocumentConverter(DominoTask):
 
     @property
     def command(self):
-        return [
-            f"{configs.REPO_DIR}/run_job.sh",
-            f"{configs.REPO_DIR}/converter",
-            self.doc_input_path,
-        ]
+        job = quote(f"{configs.REPO_DIR}/run_job.sh")
+        converter = quote(f"{configs.REPO_DIR}/converter")
+        input_path = quote(self.doc_input_path)
+        return [f"{job} {converter} {input_path}"]
 
     def output(self):
         return LocalTarget(f"{self.output_prefix()}/document.pdf", format=Nop)
@@ -222,7 +212,7 @@ class DocumentConverter(DominoTask):
         text = self.input()
         self._upload(text, self.doc_input_path)
         task_status = self._run_until_complete(self.command)
-        output_commit = task_status.get("outputCommitId")
+        output_commit = task_status.output_commit_id
         self._download_result(output_commit, self.doc_output_path, self.output())
 
 
