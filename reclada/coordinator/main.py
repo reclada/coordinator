@@ -120,7 +120,7 @@ class Tables(SimpleDominoTask):
     pdf = Parameter()
 
     owner = configs.OWNER
-    project = "tables_extraction"
+    project = "reclada_badgerdoc"
     input_path = f"input/{configs.RUN_ID}.pdf"
     output_path = f"results/output.json/{configs.RUN_ID}.pdf/json_out.json"
     command = [f"python -m badgerdoc.pipeline full {quote(input_path)} results/output.json"]
@@ -194,10 +194,8 @@ class DocumentConverter(DominoTask):
 
     @property
     def command(self):
-        job = quote(f"{configs.REPO_DIR}/run_job.sh")
-        converter = quote(f"{configs.REPO_DIR}/converter")
         input_path = quote(self.doc_input_path)
-        return [f"{job} {converter} {input_path}"]
+        return [f"libreoffice --headless --convert-to pdf {input_path}"]
 
     def output(self):
         return LocalTarget(f"{self.output_prefix()}/document.pdf", format=Nop)
