@@ -1,6 +1,6 @@
 import os
 
-from luigi.contrib.s3 import S3Target, S3Client
+from luigi.contrib.s3 import S3Client, S3Target
 from luigi.format import Nop
 
 from . import configs
@@ -11,10 +11,7 @@ S3_CLIENT = S3Client()
 class PocS3Target(S3Target):
     def __init__(self, path):
         path = os.path.join(configs.S3_DEFAULT_PATH, path)
-        format = Nop
-        client = S3_CLIENT
-
-        super().__init__(path=path, format=format, client=client)
+        super().__init__(path=path, format=Nop, client=S3_CLIENT)
 
 
 class PocS3FileUploader():

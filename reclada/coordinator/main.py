@@ -1,24 +1,23 @@
+import io
 import json
+import logging
 import os
-import shutil
+import shlex
 import time
-from io import BytesIO
-from logging import getLogger
-from shlex import quote
-from typing import List
-from uuid import uuid4
+import typing
+import uuid
 
-from luigi import Task, LocalTarget, run, Parameter, IntParameter, build
+from luigi import build, IntParameter, LocalTarget, Parameter, run, Task
 from luigi.format import Nop
 from reclada.connector import PgConnector as Connector
 from reclada.devops.domino import Domino
 
 from . import configs
-from .utils import PocS3Target, PocS3FileUploader
+from .utils import PocS3FileUploader, PocS3Target
 
 domino = Domino(configs.DOMINO_KEY, base_url=configs.DOMINO_URL)
 
-logger = getLogger("luigi-interface")
+logger = logging.getLogger("luigi-interface")
 
 
 class DominoTask(Task):
@@ -30,10 +29,10 @@ class DominoTask(Task):
 
     step_id: str
 
-    def _upload(self, input, target_path):
-        if input:
+    def _upload(self, source, target_path):
+        if source:
             logger.info("Upload file to path `%s`", target_path)
-            with input.open("r") as f:
+            with source.open("r") as f:
                 domino.upload(self.owner, self.project, target_path, f.read())
 
     def _run_until_complete(self, command):
@@ -62,14 +61,14 @@ class DominoTask(Task):
             raise RuntimeError(text)
 
         logger.info("Download file `%s` from commit `%s`", output_path, output_commit)
-        io = BytesIO()
+        data = io.BytesIO()
         blob_connection = domino.file(files[0]["url"])
-        shutil.copyfileobj(blob_connection, io)
+        shlex.copyfileobj(blob_connection, io)
         with output.open("w") as f:
-            io.seek(0)
-            shutil.copyfileobj(io, f)
+            data.seek(0)
+            shlex.copyfileobj(io, f)
         with Connector(configs.DB_URI) as c:
-            io.seek(0)
+            data.seek(0)
             c.call_func(
                 "add_job_result",
                 json.dumps({"document_id": self.document_id, "job_id": self.step_id, "urls": [output.path]}),
@@ -80,7 +79,7 @@ class DominoTask(Task):
 
 
 class SimpleDominoTask(DominoTask):
-    command: List[str]
+    command: typing.List[str]
     input_path: str
     output_path: str
 
@@ -107,7 +106,7 @@ class CsvTables(SimpleDominoTask):
 
     @property
     def command(self):
-        return [f"reclada-csv-parser {quote(self.input_path)} {quote(self.output_path)}"]
+        return [f"reclada-csv-parser {shlex.quote(self.input_path)} {shlex.quote(self.output_path)}"]
 
     def input(self):
         return LocalTarget(self.pdf, format=Nop)
@@ -123,7 +122,7 @@ class Tables(SimpleDominoTask):
     project = "reclada_badgerdoc"
     input_path = f"input/{configs.RUN_ID}.pdf"
     output_path = f"results/output.json/{configs.RUN_ID}.pdf/json_out.json"
-    command = [f"python -m badgerdoc.pipeline full {quote(input_path)} results/output.json"]
+    command = [f"python -m badgerdoc.pipeline full {shlex.quote(input_path)} results/output.json"]
     step_id = "tables_extraction"
 
     def requires(self):
@@ -140,13 +139,15 @@ class DictExtractor(DominoTask):
     project = "reclada_extractor"
     text_input_path = f"input/{configs.RUN_ID}/dicts_extractor/text.json"
     tables_input_path = f"input/{configs.RUN_ID}/dicts_extractor/tables.json"
-    output_path = f"results/stdout.txt"
+    output_path = "results/stdout.txt"
     step_id = "dicts_extractor"
 
     @property
     def command(self):
         return [
-            f"reclada-dicts-extractor {self.document_id} {quote(self.text_input_path)} {quote(self.tables_input_path)}"
+            f"reclada-dicts-extractor {self.document_id}"
+            f" {shlex.quote(self.text_input_path)}"
+            f" {shlex.quote(self.tables_input_path)}",
         ]
 
     @property
@@ -187,14 +188,14 @@ class DocumentConverter(DominoTask):
 
     @property
     def doc_output_path(self):
-        return f"file.pdf"
+        return "file.pdf"
 
     def input(self):
         return LocalTarget(self.pdf, format=Nop)
 
     @property
     def command(self):
-        input_path = quote(self.doc_input_path)
+        input_path = shlex.quote(self.doc_input_path)
         return [f"libreoffice --headless --convert-to pdf {input_path}"]
 
     def output(self):
@@ -218,7 +219,7 @@ class InitDbDocument(Task):
     pdf = Parameter()
 
     def run(self):
-        s3_url = PocS3FileUploader(self.pdf, f"{uuid4()}.pdf").upload_local_to_s3()
+        s3_url = PocS3FileUploader(self.pdf, f"{uuid.uuid4()}.pdf").upload_local_to_s3()
 
         with Connector(configs.DB_URI) as c:
             res = c.call_func(
@@ -230,7 +231,6 @@ class InitDbDocument(Task):
 
     def output(self):
         return LocalTarget(f"results/{configs.RUN_ID}/doc.json")
-        # return PocS3Target(f"{configs.RUN_ID}/doc.json")
 
 
 class All(Task):
