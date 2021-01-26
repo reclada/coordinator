@@ -128,7 +128,8 @@ class Tables(SimpleDominoTask):
     @property
     def command(self):
         my_input_path = f"/mnt/andrey_tikhonov/reclada_coordinator/{self.pdf}"
-        return [f"python -m badgerdoc.pipeline full {shlex.quote(my_input_path)} results/output.json"]
+        my_output_path = f"/mnt/andrey_tikhonov/reclada_coordinator/results/output.json"
+        return [f"python -m badgerdoc.pipeline full {shlex.quote(my_input_path)} {shlex.quote(my_output_path)}"]
 
     def requires(self):
         return DocumentConverter(self.document_id, self.pdf)
