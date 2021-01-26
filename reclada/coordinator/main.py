@@ -120,10 +120,15 @@ class Tables(SimpleDominoTask):
 
     owner = configs.OWNER
     project = "reclada_badgerdoc"
-    input_path = f"input/{configs.RUN_ID}.pdf"
+
+    input_path = None
     output_path = f"results/output.json/{configs.RUN_ID}.pdf/json_out.json"
-    command = [f"python -m badgerdoc.pipeline full {shlex.quote(input_path)} results/output.json"]
     step_id = "tables_extraction"
+
+    @property
+    def command(self):
+        my_input_path = f"/mnt/andrey_tikhonov/reclada_coordinator/{self.pdf}"
+        return [f"python -m badgerdoc.pipeline full {shlex.quote(my_input_path)} results/output.json"]
 
     def requires(self):
         return DocumentConverter(self.document_id, self.pdf)
