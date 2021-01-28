@@ -268,23 +268,5 @@ class All(Task):
             )
 
 
-from luigi.contrib.kubernetes import KubernetesJobTask
-
-
-class K8s(KubernetesJobTask):
-    name = "example"
-    label = "example label"
-
-    @property
-    def spec_schema(self):
-        return {
-            "containers": [{
-                "name": self.name,
-                "image": 'python:3.6',
-                "command": ["python", "-c", "import time;time.sleep(100)"]
-            }],
-        }
-
-
 if __name__ == "__main__":
     run()

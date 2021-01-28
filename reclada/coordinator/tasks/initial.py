@@ -25,7 +25,8 @@ class UploadDocument(Task):
                 shutil.copyfileobj(src, dest)
 
     def output(self):
-        return S3Target(f"results/{self.run_id}/doc.json")
+        _, ext = os.path.splitext(self.src)
+        return S3Target(f"results/{self.run_id}/document{ext}")
 
 
 class InitDbDocument(Task):
