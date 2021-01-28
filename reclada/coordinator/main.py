@@ -98,6 +98,7 @@ class CsvTables(SimpleDominoTask):
     output_path = f"results/csv_tables{configs.RUN_ID}.json"
 
     step_id = "csv_tables"
+    is_direct_command = False
 
     @property
     def input_path(self):
@@ -106,13 +107,25 @@ class CsvTables(SimpleDominoTask):
 
     @property
     def command(self):
-        return [f"reclada-csv-parser {shlex.quote(self.input_path)} {shlex.quote(self.output_path)}"]
+        from_s3 = configs.S3_DEFAULT_PATH + "results/1607976449/"
+        to_s3 = configs.S3_DEFAULT_PATH + self.output_prefix() + "/tables.json"
+        from_dir = os.path.dirname(self.output_path)
+        return [
+            "run.sh",
+            "--from-s3", shlex.quote(from_s3),
+            "--to-dir", shlex.quote(self.input_path),
+            "--to-s3", shlex.quote(to_s3),
+            "--from-dir", shlex.quote(from_dir),
+            "reclada-csv-parser",
+            shlex.quote(self.input_path),
+            shlex.quote(self.output_path),
+        ]
 
     def input(self):
         return LocalTarget(self.pdf, format=Nop)
 
     def output(self):
-        return PocS3Target(f"{self.output_prefix()}/text.json")
+        return PocS3Target(f"{self.output_prefix()}/tables.json")
 
 
 class Tables(SimpleDominoTask):
@@ -253,6 +266,24 @@ class All(Task):
                 "set_document_status",
                 json.dumps({"id": doc_id, "status": "done"}),
             )
+
+
+from luigi.contrib.kubernetes import KubernetesJobTask
+
+
+class K8s(KubernetesJobTask):
+    name = "example"
+    label = "example label"
+
+    @property
+    def spec_schema(self):
+        return {
+            "containers": [{
+                "name": self.name,
+                "image": 'python:3.6',
+                "command": ["python", "-c", "import time;time.sleep(100)"]
+            }],
+        }
 
 
 if __name__ == "__main__":
