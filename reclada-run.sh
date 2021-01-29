@@ -15,7 +15,7 @@ while [[ $# -gt 0 ]]; do
     shift
     shift
     echo "Dowloading: ${FROM_S3} -> ${TO_DIR}"
-        aws s3 cp "${FROM_S3}" "${TO_DIR}" --recursive
+        aws s3 cp "${FROM_S3}" "${TO_DIR}"
     ;;
   --upload)
     UPLOAD_FILE+=("$2")

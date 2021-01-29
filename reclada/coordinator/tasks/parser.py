@@ -19,7 +19,7 @@ class ParserMixin:
         _, ext = os.path.splitext(from_s3)
         to_s3 = self.output().path
         local_src_path = f"/tmp/input{ext}"
-        local_dest_path = "/tmp/output/tables.json"
+        local_dest_path = "/tmp/tables.json"
 
         return [
             "reclada-run.sh",

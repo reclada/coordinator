@@ -3,6 +3,7 @@ import os
 import shutil
 
 from luigi import Task, LocalTarget
+from luigi.format import Nop
 from luigi.util import inherits
 from reclada.coordinator.base import S3Target, DocumentTask
 from reclada.coordinator.db import Db
@@ -16,7 +17,7 @@ def document_id(src):
 @inherits(DocumentTask)
 class UploadDocument(Task):
     def input(self):
-        return LocalTarget(self.src)
+        return LocalTarget(self.src, format=Nop)
 
     def run(self):
         with self.input().open() as src:
