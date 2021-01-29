@@ -9,7 +9,7 @@ from reclada.coordinator.base import S3Target, DocumentTask
 from reclada.coordinator.db import Db
 
 
-def document_id(src):
+def document_id(src) -> int:
     with src.open() as f:
         return json.load(f)["result"]["id"]
 

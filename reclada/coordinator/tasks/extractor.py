@@ -2,12 +2,11 @@ import os
 from typing import List, Callable
 
 from luigi import Task, LocalTarget
-from luigi.util import inherits
 
 from .badgerdoc import K8sBadgerdoc, DominoBadgerdoc
 from .initial import InitDbDocument, document_id
 from .parser import K8sParser, DominoParser
-from ..base import S3Target, K8sTask, DominoTask, DocumentTask, SimpleDominoTask
+from ..base import S3Target, K8sTask, SimpleDominoTask
 
 
 class ExtractorMixin:
@@ -22,13 +21,12 @@ class ExtractorMixin:
         from_s3 = s3_doc.path
         doc_id = document_id(db_doc)
         _, ext = os.path.splitext(from_s3)
-        to_s3 = self.output().path
         local_src_path = f"/tmp/tables.json"
 
         return [
             "reclada-run.sh",
             "--download", from_s3, local_src_path,
-            "reclada-dicts-extractor", doc_id, local_src_path, local_src_path
+            "reclada-dicts-extractor", str(doc_id), local_src_path, local_src_path
         ]
 
     def requires(self):
