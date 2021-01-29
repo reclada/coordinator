@@ -2,8 +2,9 @@ import json
 import os
 import shutil
 
-from luigi import Task, Parameter, LocalTarget
-from reclada.coordinator.base import S3Target
+from luigi import Task, LocalTarget
+from luigi.util import inherits
+from reclada.coordinator.base import S3Target, DocumentTask
 from reclada.coordinator.db import Db
 
 
@@ -12,9 +13,8 @@ def document_id(src):
         return json.load(f)["result"]["id"]
 
 
+@inherits(DocumentTask)
 class UploadDocument(Task):
-    src: str = Parameter()
-    run_id: str = Parameter()
 
     def input(self):
         return LocalTarget(self.src)
@@ -29,9 +29,8 @@ class UploadDocument(Task):
         return S3Target(f"results/{self.run_id}/document{ext}")
 
 
+@inherits(DocumentTask)
 class InitDbDocument(Task):
-    src: str = Parameter()
-    run_id: str = Parameter()
 
     def run(self):
         with Db() as c:

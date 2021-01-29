@@ -1,16 +1,17 @@
 import os
 from typing import List, Callable
 
-from luigi import Parameter
-from reclada.coordinator.base import S3Target, K8sTask, DominoTask
+from luigi import Task
+from luigi.util import inherits
+from reclada.coordinator.base import S3Target, K8sTask, DominoTask, DocumentTask
 
 from .initial import UploadDocument
 
 
 class ParserMixin:
-    src: str = Parameter()
-    run_id: str = Parameter()
     input: Callable[[], S3Target]
+    clone: Callable[..., Task]
+    run_id: str
 
     @property
     def command(self) -> List[str]:
@@ -28,16 +29,18 @@ class ParserMixin:
         ]
 
     def requires(self):
-        return UploadDocument(self.src, self.run_id)
+        return self.clone(UploadDocument)
 
     def output(self):
         return S3Target(f"results/{self.run_id}/tables.json")
 
 
+@inherits(DocumentTask)
 class K8sParser(K8sTask, ParserMixin):
     image = "reclada_parser"
 
 
+@inherits(DocumentTask)
 class DominoParser(DominoTask, ParserMixin):
     is_direct_command = False
     project = "reclada_parser"

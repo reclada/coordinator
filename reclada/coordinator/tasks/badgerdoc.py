@@ -1,17 +1,17 @@
 import os
 from typing import List, Callable
 
-from luigi import Parameter, Task
-from reclada.coordinator.base import S3Target, K8sTask, DominoTask
+from luigi import Task
+from luigi.util import inherits
+from reclada.coordinator.base import S3Target, K8sTask, DominoTask, DocumentTask
 
 from .converter import K8sConverter, DominoConverter
 from .initial import UploadDocument
 
 
 class BadgerdocMixin:
-    src: str = Parameter()
-    run_id: str = Parameter()
     input: Callable[[], S3Target]
+    clone: Callable[..., Task]
 
     @property
     def command(self) -> List[str]:
@@ -35,7 +35,7 @@ class BadgerdocMixin:
         from_s3 = self.input().path
         _, ext = os.path.splitext(from_s3)
         if ext in (".pdf",):
-            return UploadDocument(self.src, self.run_id)
+            return self.clone(UploadDocument)
         else:
             return self.requires_converter()
 
@@ -46,16 +46,18 @@ class BadgerdocMixin:
         return S3Target(f"results/{self.run_id}/tables.json")
 
 
+@inherits(DocumentTask)
 class K8sBadgerdoc(K8sTask, BadgerdocMixin):
     image = "reclada_badgerdoc"
 
     def requires_converter(self):
-        return K8sConverter(self.src, self.run_id)
+        return self.clone(K8sConverter)
 
 
+@inherits(DocumentTask)
 class DominoBadgerdoc(DominoTask, BadgerdocMixin):
     is_direct_command = False
     project = "reclada_badgerdoc"
 
     def requires_converter(self):
-        return DominoConverter(self.src, self.run_id)
+        return self.clone(DominoConverter)

@@ -263,9 +263,9 @@ class All(Task):
         if not run_id:
             raise ValueError("No run id provided")
         if self.run_type == "k8s":
-            return K8sExtractor(self.src, run_id)
+            return K8sExtractor(src=self.src, run_id=run_id)
         else:
-            return DominoExtractor(self.src, run_id)
+            return DominoExtractor(src=self.src, run_id=run_id)
 
 
 if __name__ == "__main__":

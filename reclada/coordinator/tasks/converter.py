@@ -1,16 +1,18 @@
 import os
 from typing import List, Callable
 
-from luigi import Parameter
-from reclada.coordinator.base import S3Target, K8sTask, DominoTask
+from luigi import Task
+from luigi.util import inherits
+from reclada.coordinator.base import S3Target, K8sTask, DominoTask, DocumentTask
 
 from .initial import UploadDocument
 
 
 class ConverterMixin:
-    src: str = Parameter()
-    run_id: str = Parameter()
     input: Callable[[], S3Target]
+    src: str
+    run_id: str
+    clone: Callable[..., Task]
 
     @property
     def command(self) -> List[str]:
@@ -32,16 +34,18 @@ class ConverterMixin:
         ]
 
     def requires(self):
-        return UploadDocument(self.src, self.run_id)
+        return self.clone(UploadDocument)
 
     def output(self):
         return S3Target(f"results/{self.run_id}/document.pdf")
 
 
+@inherits(DocumentTask)
 class K8sConverter(K8sTask, ConverterMixin):
     image = "reclada_converter"
 
 
+@inherits(DocumentTask)
 class DominoConverter(DominoTask, ConverterMixin):
     is_direct_command = False
     project = "reclada_converter"

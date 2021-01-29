@@ -3,10 +3,11 @@ import os
 import time
 from typing import List
 
-from luigi import Task, Parameter
+from luigi import Parameter, ExternalTask, Task
 from luigi.contrib.kubernetes import KubernetesJobTask
 from luigi.contrib.s3 import S3Target as LuigiS3Target
 from luigi.format import Nop
+from luigi.util import inherits
 from reclada.devops import domino
 
 logger = logging.getLogger("luigi-interface." + __name__)
@@ -19,8 +20,15 @@ class S3Target(LuigiS3Target):
         super().__init__(path=f"{self.base_path}/{path}", format=Nop)
 
 
-class DominoTask(Task):
+class DocumentTask(Task):
+    src: str = Parameter()
+    run_id: str = Parameter()
     run_number: str = Parameter(default="")
+    run_prefix: str = Parameter(default="")
+
+
+@inherits(DocumentTask)
+class DominoTask(Task):
     is_direct_command: bool = True
     project: str
     owner: str = os.getenv("DOMINO_PROJECT_OWNER")
@@ -62,7 +70,6 @@ class DominoTask(Task):
 
 class SimpleDominoTask(DominoTask):
     command: List[str]
-    run_number: str = Parameter(default="")
 
     def run(self):
         self._run_until_complete(self.command)
@@ -70,6 +77,7 @@ class SimpleDominoTask(DominoTask):
             self.on_finished()
 
 
+@inherits(DocumentTask)
 class K8sTask(KubernetesJobTask):
     run_number: str = Parameter(default="")
     command: List[str]
