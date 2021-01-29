@@ -7,9 +7,10 @@ import time
 import typing
 import uuid
 
-from luigi import build, IntParameter, LocalTarget, Parameter, run, Task
+from luigi import IntParameter, LocalTarget, Parameter, run, Task
 from luigi.format import Nop
 from reclada.connector import PgConnector as Connector
+from reclada.coordinator.tasks.extractor import K8sExtractor, DominoExtractor
 from reclada.devops.domino import Domino
 
 from . import configs
@@ -253,19 +254,18 @@ class InitDbDocument(Task):
 
 
 class All(Task):
-    pdf = Parameter()
+    src = Parameter()
+    run_id = Parameter(default="")
+    run_type = Parameter(default="domino")
 
-    def run(self):
-        prerequisite = InitDbDocument(self.pdf)
-        build([prerequisite], local_scheduler=True)
-
-        doc_id = int(json.load(prerequisite.output().open())["result"]["id"])
-        yield DictExtractor(doc_id, self.pdf)
-        with Connector(configs.DB_URI) as c:
-            c.call_func(
-                "set_document_status",
-                json.dumps({"id": doc_id, "status": "done"}),
-            )
+    def requires(self):
+        run_id = self.run_id or os.getenv("DOMINO_RUN_ID")
+        if not run_id:
+            raise ValueError("No run id provided")
+        if self.run_type == "k8s":
+            return K8sExtractor(self.src, run_id)
+        else:
+            return DominoExtractor(self.src, run_id)
 
 
 if __name__ == "__main__":

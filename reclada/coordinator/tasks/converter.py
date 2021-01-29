@@ -39,9 +39,9 @@ class ConverterMixin:
 
 
 class K8sConverter(K8sTask, ConverterMixin):
-    image = "reclada-converter"
+    image = "reclada_converter"
 
 
 class DominoConverter(DominoTask, ConverterMixin):
     is_direct_command = False
-    project = "reclada-converter"
+    project = "reclada_converter"

@@ -35,9 +35,9 @@ class ParserMixin:
 
 
 class K8sParser(K8sTask, ParserMixin):
-    image = "reclada-converter"
+    image = "reclada_parser"
 
 
 class DominoParser(DominoTask, ParserMixin):
     is_direct_command = False
-    project = "reclada-converter"
+    project = "reclada_parser"

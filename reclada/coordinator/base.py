@@ -65,7 +65,9 @@ class SimpleDominoTask(DominoTask):
     run_number: str = Parameter(default="")
 
     def run(self):
-        return self._run_until_complete(self.command)
+        self._run_until_complete(self.command)
+        if hasattr(self, "on_finished"):
+            self.on_finished()
 
 
 class K8sTask(KubernetesJobTask):
@@ -85,3 +87,8 @@ class K8sTask(KubernetesJobTask):
                 "command": self.command,
             }],
         }
+
+    def run(self):
+        super().run()
+        if hasattr(self, "on_finished"):
+            self.on_finished()
