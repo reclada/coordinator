@@ -7,12 +7,14 @@ from luigi.util import inherits
 from .badgerdoc import K8sBadgerdoc, DominoBadgerdoc
 from .initial import InitDbDocument, document_id
 from .parser import K8sParser, DominoParser
-from ..base import S3Target, K8sTask, DominoTask, DocumentTask
+from ..base import S3Target, K8sTask, DominoTask, DocumentTask, SimpleDominoTask
 
 
 class ExtractorMixin:
     input: Callable[[], S3Target]
     clone: Callable[..., Task]
+    run_id: str
+    src: str
 
     @property
     def command(self) -> List[str]:
@@ -30,7 +32,7 @@ class ExtractorMixin:
         ]
 
     def requires(self):
-        from_s3 = self.input().path
+        from_s3 = self.src
         _, ext = os.path.splitext(from_s3)
         if ext in (".csv", ".txt", ".tsv"):
             yield self.requires_parser()
@@ -52,7 +54,7 @@ class ExtractorMixin:
         return LocalTarget(f"results/{self.run_id}/extractor.json")
 
 
-class K8sExtractor(K8sTask, ExtractorMixin):
+class K8sExtractor(ExtractorMixin, K8sTask):
     image = "reclada_extractor"
 
     def requires_badgerdoc(self) -> Task:
@@ -62,7 +64,7 @@ class K8sExtractor(K8sTask, ExtractorMixin):
         return K8sParser(self.src, self.run_id)
 
 
-class DominoExtractor(DominoTask, ExtractorMixin):
+class DominoExtractor(ExtractorMixin, SimpleDominoTask):
     is_direct_command = False
     project = "reclada_extractor"
 

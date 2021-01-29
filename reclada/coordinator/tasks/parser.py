@@ -3,7 +3,7 @@ from typing import List, Callable
 
 from luigi import Task
 from luigi.util import inherits
-from reclada.coordinator.base import S3Target, K8sTask, DominoTask, DocumentTask
+from reclada.coordinator.base import S3Target, K8sTask, DocumentTask, SimpleDominoTask
 
 from .initial import UploadDocument
 
@@ -36,11 +36,11 @@ class ParserMixin:
 
 
 @inherits(DocumentTask)
-class K8sParser(K8sTask, ParserMixin):
+class K8sParser(ParserMixin, K8sTask):
     image = "reclada_parser"
 
 
 @inherits(DocumentTask)
-class DominoParser(DominoTask, ParserMixin):
+class DominoParser(ParserMixin, SimpleDominoTask):
     is_direct_command = False
     project = "reclada_parser"

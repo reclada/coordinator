@@ -15,7 +15,6 @@ def document_id(src):
 
 @inherits(DocumentTask)
 class UploadDocument(Task):
-
     def input(self):
         return LocalTarget(self.src)
 
@@ -31,7 +30,6 @@ class UploadDocument(Task):
 
 @inherits(DocumentTask)
 class InitDbDocument(Task):
-
     def run(self):
         with Db() as c:
             res = c.add_document(

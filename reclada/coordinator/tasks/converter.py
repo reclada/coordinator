@@ -3,7 +3,7 @@ from typing import List, Callable
 
 from luigi import Task
 from luigi.util import inherits
-from reclada.coordinator.base import S3Target, K8sTask, DominoTask, DocumentTask
+from reclada.coordinator.base import S3Target, K8sTask, DocumentTask, SimpleDominoTask
 
 from .initial import UploadDocument
 
@@ -41,11 +41,11 @@ class ConverterMixin:
 
 
 @inherits(DocumentTask)
-class K8sConverter(K8sTask, ConverterMixin):
+class K8sConverter(ConverterMixin, K8sTask):
     image = "reclada_converter"
 
 
 @inherits(DocumentTask)
-class DominoConverter(DominoTask, ConverterMixin):
+class DominoConverter(ConverterMixin, SimpleDominoTask):
     is_direct_command = False
     project = "reclada_converter"
