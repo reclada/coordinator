@@ -22,7 +22,7 @@ class BadgerdocMixin:
         to_s3 = self.output().path
         local_src_path = f"/tmp/input{ext}"
         local_dest_dir = "/tmp/output"
-        local_dest_path = f"{local_dest_dir}/tables.json"
+        local_dest_path = f"{local_dest_dir}/input{ext}/json_out.json"
 
         # TODO
         return [
