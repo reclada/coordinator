@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -x
+set -e
 
 UPLOAD_FILE=()
 UPLOAD_S3=()
