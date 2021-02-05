@@ -3,7 +3,7 @@ import os
 import time
 from typing import List
 
-from luigi import Parameter, ExternalTask, Task
+from luigi import Parameter, Task
 from luigi.contrib.kubernetes import KubernetesJobTask
 from luigi.contrib.s3 import S3Target as LuigiS3Target
 from luigi.format import Nop

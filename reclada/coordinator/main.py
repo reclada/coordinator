@@ -4,23 +4,6 @@ from luigi import Parameter, run, Task
 from reclada.coordinator.tasks.extractor import K8sExtractor, DominoExtractor
 
 
-# class Tables(SimpleDominoTask):
-#     pdf = Parameter()
-#
-#     owner = configs.OWNER
-#     project = "reclada_badgerdoc"
-#
-#     input_path = None
-#     output_path = f"results/output.json/{configs.RUN_ID}.pdf/json_out.json"
-#     step_id = "tables_extraction"
-#
-#     @property
-#     def command(self):
-#         my_input_path = f"/mnt/andrey_tikhonov/reclada_coordinator/{self.pdf}"
-#         my_output_path = f"/mnt/andrey_tikhonov/reclada_coordinator/results/output.json"
-#         return [f"python -m badgerdoc.pipeline full {shlex.quote(my_input_path)} {shlex.quote(my_output_path)}"]
-
-
 class All(Task):
     src = Parameter()
     run_id = Parameter(default="")
