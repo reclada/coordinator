@@ -20,9 +20,14 @@ Automatically set by domino:
 
 Running:
 ```bash
-reclada-coordinator All --All-pdf filename.pdf --local-scheduler 
+reclada-coordinator All --All-src filename.pdf --local-scheduler
 ```
 
+Running in kubernetes:
+```bash
+reclada-coordinator All --All-src filename.pdf --All-run_type=k8s --local-scheduler
+
+```
 ### Running in Domino
 
 1. Configure environment variables in project (except automatic ones)

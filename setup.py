@@ -6,7 +6,7 @@ setup(
     name='reclada.coordinator',
     description='Dict Extractor step for Reclada Parser',
     version='0.1',
-    packages=['reclada.coordinator'],
+    packages=['reclada.coordinator', 'reclada.coordinator.tasks'],
     install_requires=[
         'reclada.connector',
         'luigi',

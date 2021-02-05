@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
-reclada-coordinator All --All-pdf "$1" --local-scheduler
+set -e
+reclada-coordinator All --All-src "$1" --local-scheduler
