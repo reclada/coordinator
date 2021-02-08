@@ -14,7 +14,7 @@ setup(
         'boto3',
     ],
     entry_points={
-        'console_scripts': ['reclada-coordinator=reclada.coordinator.main:run'],
+        'console_scripts': ['reclada-coordinator=reclada.coordinator.main:main'],
     },
     python_requires='>=3.6',
 )
