@@ -1,4 +1,5 @@
 import os
+import sys
 
 from luigi import Parameter, run, Task
 from reclada.coordinator.tasks.extractor import K8sExtractor, DominoExtractor
@@ -19,5 +20,6 @@ class All(Task):
             return DominoExtractor(src=self.src, run_id=run_id)
 
 
-if __name__ == "__main__":
-    run()
+def main():
+    if not run():
+        sys.exit(1)
