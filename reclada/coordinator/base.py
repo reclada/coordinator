@@ -9,6 +9,7 @@ from luigi.contrib.s3 import S3Target as LuigiS3Target
 from luigi.format import Nop
 from luigi.util import inherits
 from reclada.devops import domino
+from reclada.devops.domino.models.run import RunStatus
 
 logger = logging.getLogger("luigi-interface." + __name__)
 
@@ -75,7 +76,9 @@ class SimpleDominoTask(DominoTask):
     command: List[str]
 
     def run(self):
-        self._run_until_complete(self.command)
+        status = self._run_until_complete(self.command)
+        if status.status is not RunStatus.SUCCEEDED:
+            raise RunStatus(f"Run status is not success: {status.status.value}")
         if hasattr(self, "on_finished"):
             self.on_finished()
 
