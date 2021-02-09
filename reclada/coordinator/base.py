@@ -60,7 +60,7 @@ class DominoTask(Task):
         )
         task_id = task.run_id
         logger.info("%s: job started with id=%s", title, task_id)
-        logger.info("Job url: %s/jobs/%s/%s/%s", self.domino.base_url, self.owner, self.project, task_id)
+        logger.info("Domino job url: %sjobs/%s/%s/%s", self.domino.base_url, self.owner, self.project, task_id)
         is_completed = False
         task_status = None
         while not is_completed:
