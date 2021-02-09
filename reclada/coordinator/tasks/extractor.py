@@ -56,10 +56,10 @@ class K8sExtractor(ExtractorMixin, K8sTask):
     image = "reclada_extractor"
 
     def requires_badgerdoc(self) -> Task:
-        return K8sBadgerdoc(self.src, self.run_id)
+        return self.clone(K8sBadgerdoc)
 
     def requires_parser(self) -> Task:
-        return K8sParser(self.src, self.run_id)
+        return self.clone(K8sParser)
 
 
 class DominoExtractor(ExtractorMixin, SimpleDominoTask):
@@ -67,7 +67,7 @@ class DominoExtractor(ExtractorMixin, SimpleDominoTask):
     project = "reclada_extractor"
 
     def requires_badgerdoc(self) -> Task:
-        return DominoBadgerdoc(self.src, self.run_id)
+        return self.clone(DominoBadgerdoc)
 
     def requires_parser(self) -> Task:
-        return DominoParser(self.src, self.run_id)
+        return self.clone(DominoParser)

@@ -13,6 +13,13 @@ from reclada.devops import domino
 logger = logging.getLogger("luigi-interface." + __name__)
 
 
+def create_domino() -> domino.Domino:
+    return domino.Domino(
+        token=os.getenv("DOMINO_USER_API_KEY"),
+        base_url=os.getenv("DOMINO_URL", "https://try.dominodatalab.com"),
+    )
+
+
 class S3Target(LuigiS3Target):
     base_path: str = os.getenv("S3_DEFAULT_PATH").rstrip("/")
 
@@ -23,7 +30,6 @@ class S3Target(LuigiS3Target):
 class DocumentTask(Task):
     src: str = Parameter()
     run_id: str = Parameter()
-    run_number: str = Parameter(default="")
     run_prefix: str = Parameter(default="")
 
 
@@ -38,14 +44,11 @@ class DominoTask(Task):
     @property
     def domino(self) -> domino.Domino:
         if not hasattr(self, "_domino"):
-            self._domino = domino.Domino(
-                token=os.getenv("DOMINO_USER_API_KEY"),
-                base_url=os.getenv("DOMINO_URL", "https://try.dominodatalab.com"),
-            )
+            self._domino = create_domino()
         return self._domino
 
     def _run_title(self):
-        return f"{self.run_number}:{self.__class__.__name__}"
+        return f"{self.run_prefix}{self.__class__.__name__}"
 
     def _run_until_complete(self, command: List[str]):
         title = self._run_title()
@@ -57,7 +60,7 @@ class DominoTask(Task):
         )
         task_id = task.run_id
         logger.info("%s: job started with id=%s", title, task_id)
-        logger.info("Job url: %s/jobs/%s/%s/%s", self.domino.base_url, self.owner, self.project, task_id)
+        logger.info("Domino job url: %sjobs/%s/%s/%s", self.domino.base_url, self.owner, self.project, task_id)
         is_completed = False
         task_status = None
         while not is_completed:
@@ -79,13 +82,13 @@ class SimpleDominoTask(DominoTask):
 
 @inherits(DocumentTask)
 class K8sTask(KubernetesJobTask):
-    run_number: str = Parameter(default="")
+    run_prefix: str = Parameter(default="")
     command: List[str]
     image: str
 
     @property
     def name(self):
-        return f"{self.run_number}:{self.__class__.__name__}"
+        return f"{self.run_prefix}{self.__class__.__name__}"
 
     def spec_schema(self):
         return {
