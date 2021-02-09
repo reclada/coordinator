@@ -3,6 +3,7 @@ import sys
 
 from luigi import Parameter, run, Task
 from reclada.coordinator.tasks.extractor import K8sExtractor, DominoExtractor
+from .base import create_domino
 
 
 class All(Task):
@@ -17,7 +18,13 @@ class All(Task):
         if self.run_type == "k8s":
             return K8sExtractor(src=self.src, run_id=run_id)
         else:
-            return DominoExtractor(src=self.src, run_id=run_id)
+            domino = create_domino()
+            run = domino.run_status(
+                os.getenv("DOMINO_PROJECT_OWNER"),
+                os.getenv("DOMINO_PROJECT_NAME"),
+                run_id,
+            )
+            return DominoExtractor(src=self.src, run_id=run_id, run_prefix=f"{run.title}:{run.number}:")
 
 
 def main():
