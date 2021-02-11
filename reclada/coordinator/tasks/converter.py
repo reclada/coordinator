@@ -25,8 +25,7 @@ class ConverterMixin:
         return [
             "reclada-run.sh",
             "--download", from_s3, local_src_path,
-            "--upload", to_s3, f"{local_dest_path}/document.pdf",
-            "--from-dir", local_dest_path,
+            "--upload", f"{local_dest_path}/document.pdf", to_s3,
             "libreoffice",
             "--headless",
             "--convert-to", "pdf", local_src_path,
