@@ -14,11 +14,10 @@ env:
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  CONTAINER_IMAGE: coordinator-:${{ github.sha }}
+  CONTAINER_IMAGE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ AWS_DEFAULT_REGION }}.amazonaws.com/coordinator:${{ github.sha }}
 
 jobs:
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -27,4 +26,4 @@ jobs:
         run: |
           pwd
           ls -la ./
-          docker build -t ${CONTAINER_IMAGE} -f docker/Dockerfile .
+          docker build -t $CONTAINER_IMAGE -f docker/Dockerfile .
