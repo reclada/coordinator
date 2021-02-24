@@ -16,7 +16,7 @@ jobs:
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      CONTAINER_IMAGE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/coordinator:${{ github.sha }}    
+      TAG: ${{ github.sha }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -25,6 +25,8 @@ jobs:
         run: |
           pwd
           ls -la ./
+          CONTAINER_IMAGE="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/coordinator:$TAG"
+          echo $CONTAINER_IMAGE
           docker build -t $CONTAINER_IMAGE -f docker/Dockerfile .
 
       - name: Setup ECR
