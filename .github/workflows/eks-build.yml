@@ -1,0 +1,42 @@
+name: publish coordinator image to ECR
+
+on:
+  push:
+    branches: [ master, feature/dockerfile-preparations ]
+  pull_request:
+    branches: [ master, feature/dockerfile-preparations ]
+
+  workflow_dispatch:
+
+jobs:
+  coordinator:
+    name: coordinator
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Git Checkout
+        uses: actions/checkout@v2
+
+      - name: Get short Git rev
+        run: echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -b1-8)" >> $GITHUB_ENV
+
+      - name: Build and upload image to ECR
+        run: |
+          docker login -u AWS \
+            -p $(aws ecr get-login-password --region ${AWS_DEFAULT_REGION}) \
+            ${ACCOUNT}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com
+          docker build \
+            -t ${ACCOUNT}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE}:latest \
+            -t ${ACCOUNT}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE}:${TAG} \
+            -f ${DOCKERFILE} ${CONTEXT}
+          docker push ${ACCOUNT}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE}:${TAG}
+          docker push ${ACCOUNT}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE}:latest          
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: eu-west-1
+          ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+          IMAGE: coordinator
+          TAG: ${{ github.sha }}
+          DOCKERFILE: docker/Dockerfile
+          CONTEXT: .
