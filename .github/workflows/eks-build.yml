@@ -46,8 +46,8 @@ on:
 
 jobs:
 
-  web:
-    name: bouncer-web
+  coordinator:
+    name: coordinator
     runs-on: ubuntu-latest
     steps:
 
