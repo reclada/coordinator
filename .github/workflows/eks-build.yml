@@ -8,44 +8,10 @@ on:
 
   workflow_dispatch:
 
-# env:
-#   AWS_DEFAULT_REGION: eu-west-1
-#   AWS_DEFAULT_OUTPUT: json
-#   AWS_ACCOUNT_ID: 588200329560
-#   TAG: ${{ github.sha }}
-
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v2
-
-#       - name: docker build
-#         run: |
-#           pwd
-#           ls -la ./
-#           CONTAINER_IMAGE="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/coordinator:$TAG"
-#           echo $CONTAINER_IMAGE
-#           docker build -t $CONTAINER_IMAGE -f docker/Dockerfile .
-
-#       - name: Configure AWS credentials
-#         uses: aws-actions/configure-aws-credentials@v1
-#         env:
-#           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#         with:
-#           aws-access-key-id:  ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#           aws-region: us-east-1
-#       - name: Login to Amazon ECR
-#         id: login-ecr
-#         uses: aws-actions/amazon-ecr-login@v1
-
-
-
+env:
+   TAG: ${{ github.sha }}
 
 jobs:
-
   coordinator:
     name: coordinator
     runs-on: ubuntu-latest
@@ -64,7 +30,7 @@ jobs:
             ${ACCOUNT}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com
           docker build \
             -t ${ACCOUNT}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE}:latest \
-            -t ${ACCOUNT}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE}:${GITHUB_SHA_SHORT} \
+            -t ${ACCOUNT}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE}:${TAG} \
             -f ${DOCKERFILE} ${CONTEXT}
           docker push ${ACCOUNT}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE}
         env:
