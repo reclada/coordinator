@@ -8,9 +8,6 @@ on:
 
   workflow_dispatch:
 
-env:
-   TAG: ${{ github.sha }}
-
 jobs:
   coordinator:
     name: coordinator
@@ -37,7 +34,8 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: eu-west-1
-          ACCOUNT: 588200329560
+          ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
           IMAGE: coordinator
+          TAG: ${{ github.sha }}
           DOCKERFILE: docker/Dockerfile
           CONTEXT: .
