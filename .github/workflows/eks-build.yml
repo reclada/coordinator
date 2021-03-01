@@ -1,10 +1,10 @@
 name: publish coordinator image to ECR
 
-on:
-  push:
-    branches: [ master, feature/dockerfile-preparations ]
-  pull_request:
-    branches: [ master, feature/dockerfile-preparations ]
+on: push
+  # push:
+  #   branches: [ master, ]
+  # pull_request:
+  #   branches: [ master, ]
 
   workflow_dispatch:
 
