@@ -3,6 +3,7 @@ import os
 import shutil
 
 from luigi import Task, LocalTarget
+from luigi.contrib.s3 import S3Target as LuigiS3Target
 from luigi.format import Nop
 from luigi.util import inherits
 from reclada.coordinator.base import S3Target, DocumentTask
@@ -20,11 +21,15 @@ class UploadDocument(Task):
         return LocalTarget(self.src, format=Nop)
 
     def run(self):
+        if self.src.startswith("s3://"):
+            return
         with self.input().open() as src:
             with self.output().open("w") as dest:
                 shutil.copyfileobj(src, dest)
 
     def output(self):
+        if self.src.startswith("s3://"):
+            return LuigiS3Target(self.src)
         _, ext = os.path.splitext(self.src)
         return S3Target(f"results/{self.run_id}/document{ext}")
 
