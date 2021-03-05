@@ -13,6 +13,9 @@ setup(
         'requests',
         'boto3',
     ],
+    extras_require={
+        "k8s": ["pykube-ng==20.10.*"],
+    },
     entry_points={
         'console_scripts': ['reclada-coordinator=reclada.coordinator.main:main'],
     },

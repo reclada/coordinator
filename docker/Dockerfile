@@ -8,10 +8,12 @@ ENV S3_FILENAME="" \
     S3_DEFAULT_PATH="" \
     DB_URI=""
 
+RUN pip install -U pip
 COPY domino/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+RUN pip install .[k8s]
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD [ "python", "job" ]
