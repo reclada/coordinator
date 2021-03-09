@@ -53,7 +53,7 @@ class ExtractorMixin:
 
 
 class K8sExtractor(ExtractorMixin, K8sTask):
-    image = "reclada_extractor"
+    image = "extractor"
 
     def requires_badgerdoc(self) -> Task:
         return self.clone(K8sBadgerdoc)

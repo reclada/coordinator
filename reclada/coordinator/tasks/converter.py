@@ -42,7 +42,7 @@ class ConverterMixin:
 
 @inherits(DocumentTask)
 class K8sConverter(ConverterMixin, K8sTask):
-    image = "reclada_converter"
+    image = "converter"
 
 
 @inherits(DocumentTask)

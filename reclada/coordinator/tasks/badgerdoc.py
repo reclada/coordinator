@@ -50,7 +50,7 @@ class BadgerdocMixin:
 
 @inherits(DocumentTask)
 class K8sBadgerdoc(BadgerdocMixin, K8sTask):
-    image = "reclada_badgerdoc"
+    image = "badgerdoc"
 
     def requires_converter(self):
         return self.clone(K8sConverter)

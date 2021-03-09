@@ -37,7 +37,7 @@ class ParserMixin:
 
 @inherits(DocumentTask)
 class K8sParser(ParserMixin, K8sTask):
-    image = "reclada_parser"
+    image = "parser"
 
 
 @inherits(DocumentTask)

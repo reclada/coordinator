@@ -107,11 +107,18 @@ class K8sTask(KubernetesJobTask):
         return f"{self.run_prefix}{self.__class__.__name__}"
 
     @property
+    def image_repo(self):
+        repo = os.getenv("K8S_IMAGE_REPO")
+        if repo:
+            return repo.rstrip("/") + "/"
+        return ""
+
+    @property
     def spec_schema(self):
         return {
             "containers": [{
                 "name": self.name,
-                "image": self.image,
+                "image": self.image_repo + self.image,
                 "command": self.command,
                 "env": k8s_envs(),
             }],
