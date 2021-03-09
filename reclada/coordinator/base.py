@@ -104,7 +104,7 @@ class K8sTask(KubernetesJobTask):
 
     @property
     def name(self):
-        return f"{self.run_prefix}{self.__class__.__name__}"
+        return f"{self.run_prefix}{self.__class__.__name__.lower()}"
 
     @property
     def image_repo(self):
