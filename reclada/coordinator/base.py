@@ -60,7 +60,8 @@ class DominoTask(Task):
         )
         task_id = task.run_id
         logger.info("%s: job started with id=%s", title, task_id)
-        logger.info("Domino job url: %sjobs/%s/%s/%s", self.domino.base_url, self.owner, self.project, task_id)
+        logger.info("Domino job url: %sjobs/%s/%s/%s", self.domino.base_url, self.owner,
+                    self.project, task_id)
         is_completed = False
         task_status = None
         while not is_completed:
@@ -80,22 +81,39 @@ class SimpleDominoTask(DominoTask):
             self.on_finished()
 
 
+K8S_ENV_KEYS = [
+    "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "S3_DEFAULT_PATH", "S3_BUCKET",
+    "S3_REGION", "DB_URI"
+]
+
+
+def k8s_envs():
+    return [
+        {"name": k, "value": os.getenv(k)}
+        for k in K8S_ENV_KEYS
+        if k in os.environ
+    ]
+
+
 @inherits(DocumentTask)
 class K8sTask(KubernetesJobTask):
     run_prefix: str = Parameter(default="")
     command: List[str]
     image: str
+    auth_method = "service-account"
 
     @property
     def name(self):
         return f"{self.run_prefix}{self.__class__.__name__}"
 
+    @property
     def spec_schema(self):
         return {
             "containers": [{
                 "name": self.name,
                 "image": self.image,
                 "command": self.command,
+                "env": k8s_envs(),
             }],
         }
 
