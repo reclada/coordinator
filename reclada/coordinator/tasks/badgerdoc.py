@@ -24,19 +24,33 @@ class BadgerdocMixin:
         local_dest_dir = "/tmp/output"
         local_dest_path = f"{local_dest_dir}/input{ext}/json_out.json"
 
-        # TODO
-        return [
-            "reclada-run.sh",
-            "--download", from_s3, local_src_path,
-            "--upload", local_dest_path, to_s3,
-            "python", "-m", "badgerdoc.pipeline", "full",
-            local_src_path, local_dest_dir,
-        ]
+        _, ext = os.path.splitext(self.src)
+        if ext in (".xlsx",):
+            return [
+                "reclada-run.sh",
+                "--download", from_s3, local_src_path,
+                "--upload", local_dest_path, to_s3,
+                "python3", "-m",
+                "table_extractor.excel_run",
+                local_src_path, local_dest_dir,
+            ]
+        else:
+            return [
+                "reclada-run.sh",
+                "--download", from_s3, local_src_path,
+                "--upload", local_dest_path, to_s3,
+                "python3", "-m",
+                "table_extractor.run", "run-sequentially",
+                local_src_path,
+                local_dest_dir,
+                "--verbose=true",
+                "--paddle_on=true",
+            ]
 
     def requires(self):
         from_s3 = self.src
         _, ext = os.path.splitext(from_s3)
-        if ext in (".pdf",):
+        if ext in (".pdf", ".xlsx"):
             return self.clone(UploadDocument)
         else:
             return self.requires_converter()
