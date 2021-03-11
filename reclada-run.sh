@@ -16,11 +16,18 @@ while [[ $# -gt 0 ]]; do
     shift
     shift
     echo "Dowloading: ${FROM_S3} -> ${TO_DIR}"
-        aws s3 cp "${FROM_S3}" "${TO_DIR}"
+    aws s3 cp "${FROM_S3}" "${TO_DIR}"
     ;;
   --upload)
     UPLOAD_FILE+=("$2")
     UPLOAD_S3+=("$3")
+    shift
+    shift
+    shift
+    ;;
+  --upload-recursive)
+    UPLOAD_RECURSIVE_FILE+=("$2")
+    UPLOAD_RECURSIVE_S3+=("$3")
     shift
     shift
     shift
@@ -37,5 +44,11 @@ echo "Running app" "$@"
 for idx in "${!UPLOAD_FILE[@]}"; do
   FROM_FILE=${UPLOAD_FILE[$idx]}
   TO_S3=${UPLOAD_S3[$idx]}
+  aws s3 cp "${FROM_FILE}" "${TO_S3}"
+done
+
+for idx in "${!UPLOAD_RECURSIVE_FILE[@]}"; do
+  FROM_FILE=${UPLOAD_RECURSIVE_FILE[$idx]}
+  TO_S3=${UPLOAD_RECURSIVE_S3[$idx]}
   aws s3 cp "${FROM_FILE}" "${TO_S3}"
 done

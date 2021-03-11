@@ -22,7 +22,9 @@ class BadgerdocMixin:
         to_s3 = self.output().path
         local_src_path = f"/tmp/input{ext}"
         local_dest_dir = "/tmp/output"
-        local_dest_path = f"{local_dest_dir}/input{ext}/document.json"
+        local_results_dir = f"{local_dest_dir}/input{ext}"
+        local_dest_path = f"{local_results_dir}/document.json"
+        to_s3_results = S3Target(f"results/{self.run_id}/badgerdoc").path
 
         _, ext = os.path.splitext(self.src)
         if ext in (".xlsx",):
@@ -30,6 +32,7 @@ class BadgerdocMixin:
                 "reclada-run.sh",
                 "--download", from_s3, local_src_path,
                 "--upload", local_dest_path, to_s3,
+                "--upload-recursive", local_results_dir, to_s3_results,
                 "python3", "-m",
                 "table_extractor.excel_run",
                 local_src_path, local_dest_dir,
@@ -39,6 +42,7 @@ class BadgerdocMixin:
                 "reclada-run.sh",
                 "--download", from_s3, local_src_path,
                 "--upload", local_dest_path, to_s3,
+                "--upload-recursive", local_results_dir, to_s3_results,
                 "python3", "-m",
                 "table_extractor.run", "run-sequentially",
                 local_src_path,
