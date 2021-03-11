@@ -50,5 +50,5 @@ done
 for idx in "${!UPLOAD_RECURSIVE_FILE[@]}"; do
   FROM_FILE=${UPLOAD_RECURSIVE_FILE[$idx]}
   TO_S3=${UPLOAD_RECURSIVE_S3[$idx]}
-  aws s3 cp "${FROM_FILE}" "${TO_S3}"
+  aws s3 cp "${FROM_FILE}" "${TO_S3}" --recursive
 done
